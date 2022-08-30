@@ -1,19 +1,14 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<TrustFrameworkPolicy 
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" 
-  PolicySchemaVersion="0.3.0.0" 
+<TrustFrameworkPolicy xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" PolicySchemaVersion="0.3.0.0" 
   TenantId="bizzadminusa.onmicrosoft.com" 
-  PolicyId="B2C_1A_TrustFrameworkExtensions" 
-  PublicPolicyUri="http://bizzadminusa.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions">
-  
+  PolicyId="B2C_1A_Demo_TrustFrameworkExtensions_UserJourneyTimeout" 
+  PublicPolicyUri="http://bizzadminusa.onmicrosoft.com/B2C_1A_Demo_TrustFrameworkExtensions_UserJourneyTimeout">
+
   <BasePolicy>
     <TenantId>bizzadminusa.onmicrosoft.com</TenantId>
-    <PolicyId>B2C_1A_TrustFrameworkLocalization</PolicyId>
+    <PolicyId>B2C_1A_TrustFrameworkExtensions</PolicyId>
   </BasePolicy>
- <BuildingBlocks>
-      <ClaimsSchema>
+  <BuildingBlocks>
+    <ClaimsSchema>
       <ClaimType Id="startDateTime">
         <DisplayName>startDateTime</DisplayName>
         <DataType>dateTime</DataType>
@@ -56,7 +51,7 @@
         </InputClaims>
         <InputParameters>
           <InputParameter Id="operator" DataType="string" Value="later than" />
-          <InputParameter Id="timeSpanInSeconds" DataType="int" Value="120" />
+          <InputParameter Id="timeSpanInSeconds" DataType="int" Value="10" />
         </InputParameters>
         <OutputClaims>
           <OutputClaim ClaimTypeReferenceId="validTimespan" TransformationClaimType="result" />
@@ -66,37 +61,6 @@
   </BuildingBlocks>
 
   <ClaimsProviders>
-
-    <ClaimsProvider>
-      <DisplayName>Facebook</DisplayName>
-      <TechnicalProfiles>
-        <TechnicalProfile Id="Facebook-OAUTH">
-          <Metadata>
-            <Item Key="client_id">facebook_clientid</Item>
-            <Item Key="scope">email public_profile</Item>
-            <Item Key="ClaimsEndpoint">https://graph.facebook.com/me?fields=id,first_name,last_name,name,email</Item>
-          </Metadata>
-        </TechnicalProfile>
-      </TechnicalProfiles>
-    </ClaimsProvider>
-
-
-    <ClaimsProvider>
-      <DisplayName>Local Account SignIn</DisplayName>
-      <TechnicalProfiles>
-         <TechnicalProfile Id="login-NonInteractive">
-          <Metadata>
-            <Item Key="client_id">3d0b9af3-4d82-4bdc-ab12-8364aef22363</Item>
-            <Item Key="IdTokenAudience">b01ecd26-a137-4fba-8c1f-1c440c4a8216</Item>
-          </Metadata>
-          <InputClaims>
-            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="3d0b9af3-4d82-4bdc-ab12-8364aef22363" />
-            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="b01ecd26-a137-4fba-8c1f-1c440c4a8216" />
-          </InputClaims>
-        </TechnicalProfile>
-      </TechnicalProfiles>
-    </ClaimsProvider>
-
     <ClaimsProvider>
       <DisplayName>User journey timeout</DisplayName>
       <TechnicalProfiles>
@@ -127,11 +91,10 @@
         </TechnicalProfile>
       </TechnicalProfiles>
     </ClaimsProvider>
-
   </ClaimsProviders>
 
-<UserJourneys>
-	  <UserJourney Id="SignUpOrSignInUserJourneyTimeout">
+  <UserJourneys>
+    <UserJourney Id="SignUpOrSignInUserJourneyTimeout">
       <OrchestrationSteps>
 
         <!-- Demo: Set the 'startDateTime'  claim with the current date and time-->
@@ -182,7 +145,7 @@
         <!-- Show self-asserted page only if the directory does not have the user account already (i.e. we do not have an objectId). 
           This can only happen when authentication happened using a social IDP. If local account was created or authentication done
           using ESTS in step 2, then an user account must exist in the directory by this time. -->
-        <OrchestrationStep Order="5" Type="ClaimsExchange">
+       <!-- <OrchestrationStep Order="5" Type="ClaimsExchange">
           <Preconditions>
             <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
               <Value>objectId</Value>
@@ -192,7 +155,7 @@
           <ClaimsExchanges>
             <ClaimsExchange Id="SelfAsserted-Social" TechnicalProfileReferenceId="SelfAsserted-Social" />
           </ClaimsExchanges>
-        </OrchestrationStep>
+        </OrchestrationStep> -->
 
         <!-- This step reads any user attributes that we may not have received when authenticating using ESTS so they can be sent 
           in the token. -->
@@ -232,10 +195,11 @@
           </ClaimsExchanges>
         </OrchestrationStep>
 
-         <OrchestrationStep Order="9" Type="ClaimsExchange">
+        <OrchestrationStep Order="9" Type="ClaimsExchange">
           <Preconditions>
-            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
               <Value>validTimespan</Value>
+              <Value>false</Value>              
               <Action>SkipThisOrchestrationStep</Action>
             </Precondition>
           </Preconditions>
@@ -245,10 +209,11 @@
         </OrchestrationStep>
 
 
-        <OrchestrationStep Order="9" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+        <OrchestrationStep Order="10" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
 
       </OrchestrationSteps>
       <ClientDefinition ReferenceId="DefaultWeb" />
     </UserJourney>
   </UserJourneys>
+
 </TrustFrameworkPolicy>
